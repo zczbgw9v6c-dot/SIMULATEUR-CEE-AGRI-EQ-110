@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulateur apporteur — Séchage solaire agricole</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16261C; --paper:#F3F5F1; --card:#FFF; --line:#D8DDD4;
+  --amber:#A96A12; --pine:#245C3E; --muted:#68736A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Archivo',system-ui,-apple-system,sans-serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+.wrap{max-width:620px;margin:0 auto;padding:20px 16px 64px}
+
+header{margin-bottom:18px}
+.kicker{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--pine)}
+h1{font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin-top:5px}
+header p{color:var(--muted);font-size:13.5px;margin-top:6px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:16px;margin-bottom:14px}
+.card h2{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.card h2:not(:first-child){margin-top:18px}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{flex:1 1 auto;min-width:110px;padding:11px;border:1px solid var(--line);border-radius:999px;background:#fff;font:inherit;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;text-align:center;transition:background .12s,border-color .12s,color .12s}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+.field{margin-top:12px}
+.field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:5px}
+.field input,.field select{width:100%;padding:11px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-weight:600;color:var(--ink);background:#fff;font-variant-numeric:tabular-nums;-webkit-appearance:none;appearance:none}
+.field select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%2368736A' stroke-width='2' fill='none'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+.field input:focus-visible,.field select:focus-visible{outline:3px solid var(--amber);outline-offset:1px;border-color:var(--ink)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+
+.result{background:var(--ink);color:#fff;border-radius:11px;padding:20px;margin-bottom:14px}
+.result .lbl{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#9FB5A6}
+.result .big{font-size:40px;font-weight:700;letter-spacing:-.025em;font-variant-numeric:tabular-nums;line-height:1.05;margin:6px 0 0}
+.result .ctx{font-size:13px;color:#9FB5A6;margin-top:8px;line-height:1.5}
+.result .split{border-top:1px solid #38503F;margin-top:16px;padding-top:14px}
+.result .split .lbl{color:#9FB5A6}
+.result .split .val{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:3px}
+
+.detail{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.detail div{background:#F7F9F5;border:1px solid var(--line);border-radius:8px;padding:11px}
+.detail span{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.detail strong{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+
+.zbadge{display:inline-block;background:#EDF4EF;border:1px solid #A9CBB6;color:var(--pine);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;margin-top:10px}
+.zbadge.zni{background:#FDF4E3;border-color:#E4C27E;color:var(--amber)}
+
+.qual{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:11px}
+.qual b{color:var(--ink);font-weight:600}
+.notes{font-size:13px;color:var(--muted);line-height:1.6}
+.notes p{margin-bottom:9px}
+.notes p:last-child{margin-bottom:0}
+.notes b{color:var(--ink);font-weight:600}
+footer{text-align:center;font-size:11.5px;color:var(--muted);margin-top:22px}
+
+@media (max-width:430px){h1{font-size:21px}.result .big{font-size:34px}.detail{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Outil apporteur d'affaires</div>
+  <h1>Séchage solaire agricole &amp; forestier</h1>
+  <p>Estime ta commission sur un dossier en trois informations : le département, le type de produits séchés et la surface du bâtiment.</p>
+</header>
+
+<div class="card">
+  <h2>Produits séchés</h2>
+  <div class="chips" id="sectorChips">
+    <button class="chip" data-v="agricole" aria-pressed="true">Agricole</button>
+    <button class="chip" data-v="forestier" aria-pressed="false">Forestier</button>
+  </div>
+  <p class="qual" id="qual"></p>
+
+  <h2>Localisation du chantier</h2>
+  <div class="field">
+    <label for="dep">Département</label>
+    <select id="dep"></select>
+    <span class="zbadge" id="zbadge"></span>
+  </div>
+
+  <h2>Le dossier</h2>
+  <div class="two">
+    <div class="field" style="margin-top:0">
+      <label for="surf">Surface du bâtiment (m²)</label>
+      <input id="surf" type="number" inputmode="numeric" step="10" min="0" value="750">
+    </div>
+    <div class="field" style="margin-top:0">
+      <label for="nb">Nombre de dossiers</label>
+      <input id="nb" type="number" inputmode="numeric" step="1" min="1" value="1">
+    </div>
+  </div>
+</div>
+
+<div class="result">
+  <div class="lbl">Ta commission</div>
+  <div class="big" id="commission">—</div>
+  <div class="ctx" id="ctx"></div>
+  <div class="split" id="unitBlock">
+    <div class="lbl">Soit par dossier</div>
+    <div class="val" id="unit">—</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Dimensionnement de l'installation</h2>
+  <div class="detail">
+    <div><span>Surface équipée</span><strong id="dSurf">—</strong></div>
+    <div><span>Panneaux</span><strong id="dPan">—</strong></div>
+    <div><span>Puissance</span><strong id="dKw">—</strong></div>
+  </div>
+</div>
+
+<div class="card notes">
+  <p><b>Ce qu'il faut pour qualifier un dossier.</b> Un bâtiment <b>fermé</b> servant au séchage, une surface de toiture ou de terrain exploitable, et une activité agricole ou forestière déclarée. Le séchage porte sur des produits agricoles (foin, céréales, plantes aromatiques) ou forestiers (bois, plaquettes, copeaux, sciure). Le bois rapporte environ 2,4 fois plus que l'agricole à surface égale : c'est la question à poser en premier.</p>
+  <p><b>Comment le calcul fonctionne.</b> On équipe 80 % de la surface disponible. Chaque panneau hybride occupe 2,73 m² et apporte 1,62 kW thermique. Ta commission dépend ensuite de cette puissance, du département et du type de produits séchés.</p>
+  <p><b>Outre-mer et Corse.</b> En Guadeloupe, Martinique, Guyane, La Réunion, Mayotte et en Corse, le volume de certificats est doublé. Un même dossier y vaut deux fois plus qu'en métropole.</p>
+  <p><b>Les montants sont des estimations.</b> Ils dépendent du cours du marché au moment du dépôt et de la validation technique du dossier. Ne communique aucun chiffre au client : le chiffrage lui est présenté par l'équipe une fois le dossier remonté.</p>
+  <p><b>Étape suivante.</b> Une visite technique sur site détermine la surface réellement équipable et confirme le nombre de panneaux.</p>
+</div>
+
+<footer>Estimation indicative de commission — usage interne</footer>
+
+</div>
+
+<script>
+/* Barème interne. Seules ces deux valeurs sont à mettre à jour. */
+const K1 = 7.0;
+const K2 = 0.012;
+
+const BAREME={agricole:{H1:42700,H2:48500,H3:55700},forestier:{H1:102600,H2:116600,H3:134100}};
+
+const H1=[1,2,3,5,8,10,14,15,19,21,23,25,27,28,38,39,42,43,45,51,52,54,55,57,58,59,60,61,62,63,67,68,69,70,71,73,74,75,76,77,78,80,87,88,89,90,91,92,93,94,95];
+const H3=[6,11,13,20,30,34,66,83];
+const NOMS={1:"Ain",2:"Aisne",3:"Allier",4:"Alpes-de-Haute-Provence",5:"Hautes-Alpes",6:"Alpes-Maritimes",7:"Ardèche",8:"Ardennes",9:"Ariège",10:"Aube",11:"Aude",12:"Aveyron",13:"Bouches-du-Rhône",14:"Calvados",15:"Cantal",16:"Charente",17:"Charente-Maritime",18:"Cher",19:"Corrèze",20:"Corse",21:"Côte-d'Or",22:"Côtes-d'Armor",23:"Creuse",24:"Dordogne",25:"Doubs",26:"Drôme",27:"Eure",28:"Eure-et-Loir",29:"Finistère",30:"Gard",31:"Haute-Garonne",32:"Gers",33:"Gironde",34:"Hérault",35:"Ille-et-Vilaine",36:"Indre",37:"Indre-et-Loire",38:"Isère",39:"Jura",40:"Landes",41:"Loir-et-Cher",42:"Loire",43:"Haute-Loire",44:"Loire-Atlantique",45:"Loiret",46:"Lot",47:"Lot-et-Garonne",48:"Lozère",49:"Maine-et-Loire",50:"Manche",51:"Marne",52:"Haute-Marne",53:"Mayenne",54:"Meurthe-et-Moselle",55:"Meuse",56:"Morbihan",57:"Moselle",58:"Nièvre",59:"Nord",60:"Oise",61:"Orne",62:"Pas-de-Calais",63:"Puy-de-Dôme",64:"Pyrénées-Atlantiques",65:"Hautes-Pyrénées",66:"Pyrénées-Orientales",67:"Bas-Rhin",68:"Haut-Rhin",69:"Rhône",70:"Haute-Saône",71:"Saône-et-Loire",72:"Sarthe",73:"Savoie",74:"Haute-Savoie",75:"Paris",76:"Seine-Maritime",77:"Seine-et-Marne",78:"Yvelines",79:"Deux-Sèvres",80:"Somme",81:"Tarn",82:"Tarn-et-Garonne",83:"Var",84:"Vaucluse",85:"Vendée",86:"Vienne",87:"Haute-Vienne",88:"Vosges",89:"Yonne",90:"Territoire de Belfort",91:"Essonne",92:"Hauts-de-Seine",93:"Seine-Saint-Denis",94:"Val-de-Marne",95:"Val-d'Oise"};
+const DOM={971:"Guadeloupe",972:"Martinique",973:"Guyane",974:"La Réunion",976:"Mayotte"};
+
+function infos(code){
+  if(DOM[code]) return {nom:DOM[code],zone:'H3',zni:true};
+  const z = H3.includes(code)?'H3' : (H1.includes(code)?'H1':'H2');
+  return {nom:NOMS[code],zone:z,zni:code===20};
+}
+
+// Liste déroulante
+const sel=document.getElementById('dep');
+const codes=[...Object.keys(NOMS).map(Number).sort((a,b)=>a-b),...Object.keys(DOM).map(Number)];
+sel.innerHTML=codes.map(c=>{
+  const pad=c<100?String(c).padStart(2,'0'):c;
+  return `<option value="${c}">${pad} — ${infos(c).nom}</option>`;
+}).join('');
+sel.value='972';
+
+const state={sector:'agricole'};
+const eur=n=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n||0);
+const num=n=>new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(n||0);
+
+function render(){
+  const code=parseInt(sel.value,10);
+  const i=infos(code);
+  const surface=Math.max(0,parseFloat(document.getElementById('surf').value)||0);
+  const nb=Math.max(1,parseInt(document.getElementById('nb').value,10)||1);
+
+  const panneaux=Math.floor((surface*0.80)/2.73);
+  const kw=panneaux*1.62;
+  const mult=i.zni?2:1;
+  const mwh=kw*BAREME[state.sector][i.zone]/1000*mult;
+  const commission=mwh*K1*K2;
+
+  const b=document.getElementById('zbadge');
+  b.textContent=i.zni?`Zone ${i.zone} · volume doublé`:`Zone ${i.zone}`;
+  b.className='zbadge'+(i.zni?' zni':'');
+
+  document.getElementById('commission').textContent=panneaux>0?eur(commission*nb):'—';
+  document.getElementById('unit').textContent=panneaux>0?eur(commission):'—';
+  document.getElementById('unitBlock').style.display=(panneaux>0&&nb>1)?'block':'none';
+  document.getElementById('ctx').textContent=panneaux>0
+    ? `${nb>1?nb+' dossiers de ':''}${num(surface)} m² · ${state.sector==='agricole'?'produits agricoles':'produits forestiers'} · ${i.nom}`
+    : "Renseigne une surface pour lancer l'estimation.";
+
+  document.getElementById('dSurf').textContent=panneaux>0?num(panneaux*2.73)+' m²':'—';
+  document.getElementById('dPan').textContent=panneaux>0?num(panneaux):'—';
+  document.getElementById('dKw').textContent=panneaux>0?num(kw)+' kW':'—';
+
+  document.getElementById('qual').innerHTML = state.sector==='agricole'
+    ? "<b>À vérifier au téléphone :</b> si le client sèche aussi du bois, des plaquettes, des copeaux ou de la sciure, le dossier relève du forestier et le barème n'est pas le même. Pose la question avant de valider."
+    : "<b>À confirmer :</b> le barème forestier suppose que les produits séchés sont bien du bois ou des coproduits forestiers. Si l'exploitation ne sèche que du fourrage ou des céréales, repasse en agricole.";
+
+}
+
+document.querySelectorAll('#sectorChips .chip').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    state.sector=btn.dataset.v;
+    document.querySelectorAll('#sectorChips .chip').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+    render();
+  });
+});
+['dep','surf','nb'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',render);
+  document.getElementById(id).addEventListener('change',render);
+});
+render();
+</script>
+</body>
+</html>
